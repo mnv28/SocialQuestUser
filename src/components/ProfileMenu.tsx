@@ -87,7 +87,7 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
+        {/* <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
               {user?.fullName || "User"}
@@ -198,9 +198,9 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
           </DialogContent>
         </Dialog>
 
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator /> */}
         <DropdownMenuItem onClick={onLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="mr-2 h-4 w-4 cursor-pointer" />
           <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

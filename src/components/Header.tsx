@@ -15,7 +15,7 @@ const Header = ({ user, onLogout }: HeaderProps) => {
           <SidebarTrigger className="h-8 w-8 bg-white/80 hover:bg-white border border-slate-200 shadow-sm" />
           <div>
             <h1 className="text-xl font-semibold text-slate-800">Dashboard</h1>
-            <p className="text-sm text-slate-500">Welcome back , {user.fullName}</p>
+            {/* <p className="text-sm text-slate-500">Welcome back {user.fullName}</p> */}
           </div>
         </div>
 

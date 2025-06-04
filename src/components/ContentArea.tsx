@@ -23,6 +23,23 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
   const vizRef = useRef<any>(null);
 
   useEffect(() => {
+  const updateScale = () => {
+    if (tableauContainerRef.current?.parentElement) {
+      const parentWidth = tableauContainerRef.current.parentElement.offsetWidth;
+      const scale = parentWidth / 1280; // 1280 is Tableau dashboard's native width
+      tableauContainerRef.current.style.setProperty('--scale', scale.toString());
+    }
+  };
+
+  window.addEventListener('resize', updateScale);
+  updateScale(); // run initially
+
+  return () => {
+    window.removeEventListener('resize', updateScale);
+  };
+}, [selectedContent?.url]);
+
+  useEffect(() => {
     let mounted = true;
 
     const loadContent = async () => {
@@ -166,7 +183,7 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
           </div>
           {/* <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}} />
               Refresh
             </Button>
             <Button variant="outline" size="sm" onClick={handleOpenExternal}>
@@ -227,15 +244,22 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
                 </div>
               </div>
             ) : selectedContent.url.includes("tableau.com") ? (
-              <div
-                ref={tableauContainerRef}
-                className="w-full h-full"
-                style={{
-                  minHeight: "800px",
-                  width: "100%",
-                  overflow: "auto",
-                }}
-              />
+             <div className="w-full h-full overflow-auto relative">
+ <div
+  className="absolute top-0 left-0 origin-top-left"
+  ref={tableauContainerRef}
+  style={
+    {
+      transform: "scale(var(--scale))",
+      transformOrigin: "top left",
+      width: "1280px",
+      height: "800px",
+      // bypass TS check
+      ["--scale"]: "1",
+    } as React.CSSProperties
+  }
+/>
+</div>
             ) : (
               <div className="h-full w-full overflow-x-auto">
                 <div className="min-w-full h-full">
@@ -249,10 +273,11 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
                     onLoad={() => setIsLoading(false)}
                     onError={handleIframeError}
                     style={{
-                      minHeight: "800px",
+                      minHeight: "calc(100vh - 200px)",
                       width: "100%",
-                      height: "100%",
+                      maxWidth: "100%",
                       overflow: "auto",
+                      display: "block"
                     }}
                   />
                 </div>

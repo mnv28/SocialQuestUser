@@ -40,13 +40,13 @@ const AppSidebar = ({ menuData, onMenuItemClick }: AppSidebarProps) => {
   };
 
   return (
-    <Sidebar className="bg-white/90 backdrop-blur-sm border-r border-slate-200/50 shadow-lg">
+    <Sidebar className="bg-white border-r border-slate-200/50 shadow-lg">
       <div className="p-4 border-b border-slate-200/50">
         <div className="flex items-center gap-3">
           {!isCollapsed && (
-            <div>
-              <h2 className="font-semibold text-slate-800">Analytics Hub</h2>
-              <p className="text-xs text-slate-500">Dashboard Portal</p>
+            <div className="flex items-center gap-2">
+              <img src="/logo.webp" alt="Logo" className="h-8 w-auto cursor-pointer" />
+              {/* <p className="text-xs text-slate-500">Dashboard Portal</p> */}
             </div>
           )}
         </div>
@@ -93,7 +93,7 @@ const AppSidebar = ({ menuData, onMenuItemClick }: AppSidebarProps) => {
                         variant="ghost"
                         className={`w-full justify-start h-auto p-2 text-left hover:bg-blue-50 transition-colors ${
                           selectedItem === item.id
-                            ? "bg-blue-50 text-blue-700 border-l-2 border-blue-500"
+                            ? "bg-blue-50 text-orange-700 border-l-2 border-orange-500"
                             : "text-slate-600"
                         }`}
                         onClick={() => handleItemClick(item)}
