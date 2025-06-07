@@ -22,23 +22,41 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
   const tableauContainerRef = useRef<HTMLDivElement>(null);
   const vizRef = useRef<any>(null);
 
-  useEffect(() => {
+  // Function to calculate and apply the optimal scale
   const updateScale = () => {
-    if (tableauContainerRef.current?.parentElement) {
-      const parentWidth = tableauContainerRef.current.parentElement.offsetWidth;
-      const scale = parentWidth / 1280; // 1280 is Tableau dashboard's native width
-      tableauContainerRef.current.style.setProperty('--scale', scale.toString());
-    }
+    if (!tableauContainerRef.current?.parentElement) return;
+    
+    const container = tableauContainerRef.current.parentElement;
+    const containerWidth = container.clientWidth;
+    
+    // Calculate scale based on width only to ensure perfect horizontal fit
+    const scale = containerWidth / 1280; // 1280 is Tableau dashboard's native width
+    
+    // Apply the scale
+    tableauContainerRef.current.style.transform = `scale(${scale})`;
+    tableauContainerRef.current.style.transformOrigin = "top left";
+    
+    // Update container dimensions to prevent horizontal overflow
+    // Use a larger height to accommodate full content
+    tableauContainerRef.current.style.width = `${1280 / scale}px`;
+    tableauContainerRef.current.style.height = `${2000 / scale}px`; // Increased height to show more content
   };
 
-  window.addEventListener('resize', updateScale);
-  updateScale(); // run initially
+  // Update scale on window resize and content change
+  useEffect(() => {
+    const handleResize = () => {
+      updateScale();
+    };
 
-  return () => {
-    window.removeEventListener('resize', updateScale);
-  };
-}, [selectedContent?.url]);
+    window.addEventListener('resize', handleResize);
+    updateScale(); // Initial scale calculation
 
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [selectedContent?.url]);
+
+  // Load Tableau content
   useEffect(() => {
     let mounted = true;
 
@@ -50,7 +68,7 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
 
       try {
         if (selectedContent.url.includes("tableau.com")) {
-          // Clean up previous viz if it existsvizRef
+          // Clean up previous viz if it exists
           if (vizRef.current) {
             vizRef.current.dispose();
             vizRef.current = null;
@@ -60,10 +78,13 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
             const options = {
               hideTabs: true,
               hideToolbar: true,
-              width: "100%",
-              height: "100%",
+              width: "1280px", // Fixed width
+              height: "2000px", // Increased height to show more content
               onFirstInteractive: () => {
-                if (mounted) setIsLoading(false);
+                if (mounted) {
+                  setIsLoading(false);
+                  updateScale(); // Update scale after content loads
+                }
               },
             };
 
@@ -74,7 +95,7 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
             );
           }
         } else {
-          // For non-Tableau content, wait for iframe to load
+          // For non-Tableau content
           const timer = setTimeout(() => {
             if (mounted) setIsLoading(false);
           }, 2000);
@@ -100,41 +121,6 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
     };
   }, [selectedContent?.url]);
 
-  const handleRefresh = () => {
-    setKey((prev) => prev + 1);
-    setIsLoading(true);
-    setHasError(false);
-
-    if (selectedContent?.url.includes("tableau.com")) {
-      try {
-        if (vizRef.current) {
-          vizRef.current
-            .refreshDataAsync()
-            .then(() => {
-              setIsLoading(false);
-            })
-            .catch(() => {
-              setHasError(true);
-              setIsLoading(false);
-            });
-        }
-      } catch (error) {
-        console.error("Error refreshing Tableau viz:", error);
-        setHasError(true);
-        setIsLoading(false);
-      }
-    } else {
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 2000);
-    }
-
-    toast({
-      title: "Content refreshed",
-      description: "Dashboard data has been updated.",
-    });
-  };
-
   const handleOpenExternal = () => {
     if (selectedContent?.url) {
       window.open(selectedContent.url, "_blank");
@@ -159,8 +145,7 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
                 Select a Dashboard
               </CardTitle>
               <CardDescription className="text-slate-600">
-                Choose a menu item from the sidebar to view analytics and
-                reports
+                Choose a menu item from the sidebar to view analytics and reports
               </CardDescription>
             </CardHeader>
           </Card>
@@ -170,30 +155,9 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
   }
 
   return (
-    <main className="flex-1 p-6 overflow-auto">
-      <div className="flex flex-col space-y-4 h-full">
-        <div className="flex items-center justify-between sticky top-0 bg-white/80 backdrop-blur-sm z-20 py-2">
-          <div>
-            <h2 className="text-2xl font-bold text-slate-800">
-              {selectedContent.title}
-            </h2>
-            <p className="text-sm text-slate-500">
-              Interactive dashboard and analytics
-            </p>
-          </div>
-          {/* <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-              <RefreshCw className={h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}} />
-              Refresh
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleOpenExternal}>
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Open
-            </Button>
-          </div> */}
-        </div>
-
-        <Card className="flex-1 overflow-hidden">
+    <main className="flex-1 p-0 overflow-hidden">
+      <div className="flex flex-col h-full">
+        <Card className="flex-1 overflow-hidden border-0 shadow-orange-400">
           <CardContent className="p-0 h-full relative">
             {isLoading && (
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/80 backdrop-blur-sm">
@@ -244,43 +208,37 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
                 </div>
               </div>
             ) : selectedContent.url.includes("tableau.com") ? (
-             <div className="w-full h-full overflow-auto relative">
- <div
-  className="absolute top-0 left-0 origin-top-left"
-  ref={tableauContainerRef}
-  style={
-    {
-      transform: "scale(var(--scale))",
-      transformOrigin: "top left",
-      width: "1280px",
-      height: "800px",
-      // bypass TS check
-      ["--scale"]: "1",
-    } as React.CSSProperties
-  }
-/>
-</div>
+              <div className="w-full h-full overflow-x-hidden overflow-y-auto relative">
+                <div
+                  ref={tableauContainerRef}
+                  className="absolute top-0 left-0"
+                  style={{
+                    transform: "scale(1)",
+                    transformOrigin: "top left",
+                    width: "1280px",
+                    height: "2000px", // Increased height to show more content
+                  }}
+                />
+              </div>
             ) : (
-              <div className="h-full w-full overflow-x-auto">
-                <div className="min-w-full h-full">
-                  <iframe
-                    key={key}
-                    src={selectedContent.url}
-                    className="w-full h-full border-0 rounded-lg"
-                    title={selectedContent.title}
-                    allow="fullscreen"
-                    loading="lazy"
-                    onLoad={() => setIsLoading(false)}
-                    onError={handleIframeError}
-                    style={{
-                      minHeight: "calc(100vh - 200px)",
-                      width: "100%",
-                      maxWidth: "100%",
-                      overflow: "auto",
-                      display: "block"
-                    }}
-                  />
-                </div>
+              <div className="h-full w-full">
+                <iframe
+                  key={key}
+                  src={selectedContent.url}
+                  className="w-full h-full border-0"
+                  title={selectedContent.title}
+                  allow="fullscreen"
+                  loading="lazy"
+                  onLoad={() => setIsLoading(false)}
+                  onError={handleIframeError}
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                    maxWidth: "100%",
+                    overflow: "auto",
+                    display: "block"
+                  }}
+                />
               </div>
             )}
           </CardContent>

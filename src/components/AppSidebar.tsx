@@ -21,7 +21,7 @@ interface AppSidebarProps {
 }
 
 const AppSidebar = ({ menuData, onMenuItemClick }: AppSidebarProps) => {
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar();
   const isCollapsed = state === "collapsed";
   const [expandedGroups, setExpandedGroups] = useState<number[]>([1]);
   const [selectedItem, setSelectedItem] = useState<number | null>(null);
@@ -37,6 +37,7 @@ const AppSidebar = ({ menuData, onMenuItemClick }: AppSidebarProps) => {
   const handleItemClick = (item: MenuItem) => {
     setSelectedItem(item.id);
     onMenuItemClick(item.title, item.url);
+    setOpen(false);
   };
 
   return (
