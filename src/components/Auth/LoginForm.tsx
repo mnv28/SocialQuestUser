@@ -70,7 +70,7 @@ export const LoginForm = ({
     <Card className="backdrop-blur-sm bg-white/80 shadow-xl border-0">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5 text-blue-600" />
+          <User className="h-5 w-5 text-orange-500" />
           Welcome Back
         </CardTitle>
         <CardDescription>Sign in to access your dashboard</CardDescription>
@@ -105,7 +105,7 @@ export const LoginForm = ({
         <button
           type="button"
           onClick={() => setIsForgotPasswordOpen(true)}
-          className="mt-1 text-sm text-blue-600 hover:text-blue-500"
+          className="mt-1 text-sm text-orange-600 hover:text-orange-500"
         >
           Forgot your password?
         </button>
@@ -115,7 +115,7 @@ export const LoginForm = ({
           onClick={onClickLogin}
           loading={loading}
           disabled={loading || !isValid || !isDirty}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
         >
           Sign In
         </ActionButton>

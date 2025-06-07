@@ -21,55 +21,49 @@ interface AuthFormProps {
 }
 
 const AuthForm = ({ onLogin, loading }: AuthFormProps) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
-  const [resetEmail, setResetEmail] = useState("");
+  const { control, handleSubmit } = useForm();
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const { control } = useForm({
-    defaultValues: {
-      email: "",
-    },
-    mode: "all",
-  });
-
-  const handleForgotPassword = async () => {
-    if (!resetEmail) {
+  const handleForgotPassword = handleSubmit(async (data) => {
+    setIsLoading(true);
+    try {
+      // Add your password reset logic here
+      toast({
+        title: "Reset Instructions Sent",
+        description: "Please check your email for password reset instructions.",
+      });
+      setIsForgotPasswordOpen(false);
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Please enter your email address.",
+        description: "Failed to send reset instructions. Please try again.",
         variant: "destructive",
       });
-      return;
-    }
-
-    setIsLoading(true);
-    setTimeout(() => {
-      toast({
-        title: "Success",
-        description:
-          "Password reset instructions have been sent to your email.",
-      });
+    } finally {
       setIsLoading(false);
-      setIsForgotPasswordOpen(false);
-      setResetEmail("");
-    }, 1000);
-  };
+    }
+  });
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-white">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Analytics Hub
-          </h1>
-          <p className="text-slate-600 mt-2">Your gateway to data insights</p>
+          <div className="flex justify-center mb-4">
+            <img 
+              src="/logo.webp" 
+              alt="Social Quest" 
+              className="h-16 w-auto"
+            />
+          </div>
+          {/* <p className="text-orange-600 mt-2 font-medium">Your Social Media Analytics Platform</p> */}
         </div>
 
         <Tabs defaultValue="login" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Login</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-orange-50">
+            <TabsTrigger value="login" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">Login</TabsTrigger>
+            <TabsTrigger value="signup" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white">Sign Up</TabsTrigger>
           </TabsList>
 
           <TabsContent value="login">
@@ -103,7 +97,11 @@ const AuthForm = ({ onLogin, loading }: AuthFormProps) => {
               className="pl-10 pr-10"
             />
             <DialogFooter>
-              <Button onClick={handleForgotPassword} disabled={isLoading}>
+              <Button 
+                onClick={handleForgotPassword} 
+                disabled={isLoading}
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+              >
                 {isLoading ? "Sending..." : "Send Reset Instructions"}
               </Button>
             </DialogFooter>

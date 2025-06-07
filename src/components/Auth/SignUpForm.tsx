@@ -111,7 +111,7 @@ export const SignUpForm = () => {
     <Card className="backdrop-blur-sm bg-white/80 shadow-xl border-0">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <User className="h-5 w-5 text-blue-600" />
+          <User className="h-5 w-5 text-orange-500" />
           Create Account
         </CardTitle>
         <CardDescription>Join us to start exploring your data</CardDescription>
@@ -173,7 +173,7 @@ export const SignUpForm = () => {
           onClick={onSubmit}
           loading={isPending}
           disabled={isPending || !isValid || !isDirty}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white"
         >
           Create Account
         </ActionButton>
