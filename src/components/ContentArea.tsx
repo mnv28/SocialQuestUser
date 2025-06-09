@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -10,6 +10,12 @@ import { Button } from "@/components/ui/button";
 import { BarChart3, ExternalLink, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+declare global {
+  interface Window {
+    tableau: any;
+  }
+}
+
 interface ContentAreaProps {
   selectedContent: { title: string; url: string } | null;
 }
@@ -19,22 +25,113 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
   const [hasError, setHasError] = useState(false);
   const [key, setKey] = useState(0);
   const { toast } = useToast();
+  const vizContainerRef = useRef<HTMLDivElement>(null);
+  const vizRef = useRef<any>(null);
+
+  const getTableauEmbedUrl = (url: string) => {
+    try {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split('/').filter(Boolean);
+      
+      // Handle /views/ format
+      const viewsIndex = pathParts.indexOf('views');
+      if (viewsIndex !== -1 && viewsIndex < pathParts.length - 2) {
+        const workbookName = pathParts[viewsIndex + 1];
+        const viewName = pathParts[viewsIndex + 2];
+        return `https://public.tableau.com/views/${workbookName}/${viewName}`;
+      }
+      
+      // Handle /app/profile/ format
+      const profileIndex = pathParts.indexOf('profile');
+      if (profileIndex !== -1 && profileIndex < pathParts.length - 2) {
+        const workbookName = pathParts[pathParts.length - 2];
+        const viewName = pathParts[pathParts.length - 1];
+        return `https://public.tableau.com/views/${workbookName}/${viewName}`;
+      }
+
+      throw new Error("Invalid Tableau URL format");
+    } catch (error) {
+      console.error("Error parsing Tableau URL:", error);
+      return url;
+    }
+  };
 
   useEffect(() => {
     if (!selectedContent) return;
     setIsLoading(true);
     setHasError(false);
+
+    if (selectedContent.url.includes("tableau.com")) {
+      // Clean up previous viz if it exists
+      if (vizRef.current) {
+        vizRef.current.dispose();
+      }
+
+      // Initialize new viz
+      const initViz = async () => {
+        try {
+          if (!vizContainerRef.current) return;
+
+          // Wait for Tableau API to be available
+          if (!window.tableau) {
+            await new Promise((resolve) => {
+              const checkTableau = () => {
+                if (window.tableau) {
+                  resolve(true);
+                } else {
+                  setTimeout(checkTableau, 100);
+                }
+              };
+              checkTableau();
+            });
+          }
+
+          const options = {
+            hideTabs: true,
+            hideToolbar: false,
+            width: "100%",
+            height: "100%",
+            onFirstInteractive: () => {
+              setIsLoading(false);
+            },
+            onFirstVizSizeKnown: () => {
+              setIsLoading(false);
+            },
+            onError: (error: any) => {
+              console.error("Tableau error:", error);
+              setHasError(true);
+              setIsLoading(false);
+            }
+          };
+
+          const embedUrl = getTableauEmbedUrl(selectedContent.url);
+          
+          vizRef.current = new window.tableau.Viz(
+            vizContainerRef.current,
+            embedUrl,
+            options
+          );
+        } catch (error) {
+          console.error("Error initializing Tableau viz:", error);
+          setHasError(true);
+          setIsLoading(false);
+        }
+      };
+
+      initViz();
+    }
+
+    return () => {
+      if (vizRef.current) {
+        vizRef.current.dispose();
+      }
+    };
   }, [selectedContent?.url]);
 
   const handleOpenExternal = () => {
     if (selectedContent?.url) {
       window.open(selectedContent.url, "_blank");
     }
-  };
-
-  const handleIframeError = () => {
-    setHasError(true);
-    setIsLoading(false);
   };
 
   if (!selectedContent) {
@@ -93,9 +190,8 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
                       Content Blocked
                     </h3>
                     <p className="text-sm text-slate-600 leading-relaxed">
-                      This dashboard cannot be displayed in an embedded frame
-                      due to security restrictions. This is common with Tableau
-                      Public and other external platforms.
+                      This dashboard cannot be displayed due to security restrictions.
+                      Please try opening it in a new tab.
                     </p>
                   </div>
                   <div className="space-y-3">
@@ -114,25 +210,25 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
               </div>
             ) : (
               <div className="h-full w-full">
-                <iframe
-                  key={key}
-                  src={
-                    selectedContent.url.includes("tableau.com")
-                      ? `${selectedContent.url}?embed=yes&:showVizHome=no&:host_url=https://public.tableau.com/&:embed_code_version=3&:tabs=no&:toolbar=yes&:animate_transition=yes&:display_static_image=no&:display_spinner=no&:display_overlay=yes&:display_count=yes&:language=en-US&:loadOrderID=0`
-                      : selectedContent.url
-                  }
-                  className="w-full h-full border-0"
-                  title={selectedContent.title}
-                  allowFullScreen
-                  loading="lazy"
-                  onLoad={() => setIsLoading(false)}
-                  onError={handleIframeError}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    border: "none",
-                  }}
-                />
+                {selectedContent.url.includes("tableau.com") ? (
+                  <div ref={vizContainerRef} className="w-full h-full" />
+                ) : (
+                  <iframe
+                    key={key}
+                    src={selectedContent.url}
+                    className="w-full h-full border-0"
+                    title={selectedContent.title}
+                    allowFullScreen
+                    loading="lazy"
+                    onLoad={() => setIsLoading(false)}
+                    onError={() => setHasError(true)}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      border: "none",
+                    }}
+                  />
+                )}
               </div>
             )}
           </CardContent>
