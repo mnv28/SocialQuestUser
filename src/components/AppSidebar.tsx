@@ -37,7 +37,6 @@ const AppSidebar = ({ menuData, onMenuItemClick }: AppSidebarProps) => {
   const handleItemClick = (item: MenuItem) => {
     setSelectedItem(item.id);
     onMenuItemClick(item.title, item.url);
-    setOpen(false);
   };
 
   return (
