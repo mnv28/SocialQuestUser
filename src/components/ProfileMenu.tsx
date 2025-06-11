@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User as LucideUser, Settings, Key, LogOut } from "lucide-react";
+import { User as LucideUser, Settings, Key, LogOut, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Login } from "./Auth/LoginForm";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface ProfileMenuProps {
   user: Login;
@@ -35,6 +36,8 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
+  const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
   const { toast } = useToast();
 
   const handleChangePassword = async () => {
@@ -61,18 +64,96 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
       return;
     }
 
-    // Simulate password change
-    setTimeout(() => {
+    try {
+      // TODO: Replace with actual API call
+      // const response = await api.changePassword({
+      //   currentPassword,
+      //   newPassword,
+      // });
+      
       toast({
         title: "Success",
         description: "Password has been updated successfully.",
       });
-      setIsLoading(false);
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setIsChangePasswordOpen(false);
-    }, 1000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update password. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const fullName = formData.get("name") as string;
+    const email = formData.get("email") as string;
+
+    try {
+      // TODO: Replace with actual API call
+      // const response = await api.updateProfile({
+      //   fullName,
+      //   email,
+      // });
+
+      toast({
+        title: "Success",
+        description: "Profile updated successfully.",
+      });
+      setIsProfileSettingsOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) {
+      toast({
+        title: "Error",
+        description: "Please enter your password to confirm account deletion.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // TODO: Replace with actual API call
+      // const response = await api.deleteAccount({
+      //   password: deletePassword,
+      // });
+
+      toast({
+        title: "Account Deleted",
+        description: "Your account has been permanently deleted.",
+      });
+      onLogout();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      setDeletePassword("");
+      setIsDeleteAccountOpen(false);
+    }
   };
 
   return (
@@ -87,7 +168,7 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
-        {/* <DropdownMenuLabel className="font-normal">
+        <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">
               {user?.fullName || "User"}
@@ -170,35 +251,79 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
                 Update your profile information.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  defaultValue={user?.fullName || ""}
-                  placeholder="Enter your full name"
-                />
+            <form onSubmit={handleUpdateProfile}>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    defaultValue={user?.fullName || ""}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    defaultValue={user?.email || ""}
+                    placeholder="Enter your email"
+                  />
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  defaultValue={user?.email || ""}
-                  placeholder="Enter your email"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={() => setIsProfileSettingsOpen(false)}>
-                Save Changes
-              </Button>
-            </DialogFooter>
+              <DialogFooter>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Saving..." : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
 
-        <DropdownMenuSeparator /> */}
+        <AlertDialog open={isDeleteAccountOpen} onOpenChange={setIsDeleteAccountOpen}>
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
+              <Trash2 className="mr-2 h-4 w-4" />
+              <span>Delete Account</span>
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete your account
+                and remove all your data from our servers. Please enter your password to confirm.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="delete-password">Password</Label>
+                <Input
+                  id="delete-password"
+                  type="password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  placeholder="Enter your password to confirm"
+                />
+              </div>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteAccount}
+                disabled={isLoading || !deletePassword}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {isLoading ? "Deleting..." : "Delete Account"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onLogout}>
           <LogOut className="mr-2 h-4 w-4 cursor-pointer" />
           <span>Log out</span>
