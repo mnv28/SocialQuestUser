@@ -23,6 +23,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Login } from "./Auth/LoginForm";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useAxios } from "@/utils/axios";
+import { CHANGE_PASSWORD_ROUTE, DELETE_ACCOUNT_ROUTE } from "@/constants/routes";
 
 interface ProfileMenuProps {
   user: Login;
@@ -39,6 +41,7 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
   const { toast } = useToast();
+  const { axiosInstance } = useAxios();
 
   const handleChangePassword = async () => {
     setIsLoading(true);
@@ -65,24 +68,29 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
     }
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await api.changePassword({
-      //   currentPassword,
-      //   newPassword,
-      // });
-      
-      toast({
-        title: "Success",
-        description: "Password has been updated successfully.",
+      const { data } = await axiosInstance.post(CHANGE_PASSWORD_ROUTE, {
+        currentPassword,
+        newPassword
       });
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setIsChangePasswordOpen(false);
+
+      if (data.success) {
+        toast({
+          title: "Success",
+          description: "Password has been updated successfully.",
+        });
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setIsChangePasswordOpen(false);
+      } else {
+        console.log(data.response.data.message);
+        throw new Error(data.message || 'Failed to update password');
+      }
     } catch (error) {
+      console.error('Error changing password:', error.response.data.message);
       toast({
         title: "Error",
-        description: "Failed to update password. Please try again.",
+        description: error.response.data.message,
         variant: "destructive",
       });
     } finally {
@@ -133,20 +141,26 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
 
     setIsLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // const response = await api.deleteAccount({
-      //   password: deletePassword,
-      // });
-
-      toast({
-        title: "Account Deleted",
-        description: "Your account has been permanently deleted.",
+      const { data } = await axiosInstance.delete(DELETE_ACCOUNT_ROUTE, {
+        data: {
+          password: deletePassword
+        }
       });
-      onLogout();
+
+      if (data.success) {
+        toast({
+          title: "Account Deleted",
+          description: "Your account has been permanently deleted.",
+        });
+        onLogout();
+      } else {
+        throw new Error(data.message || 'Failed to delete account');
+      }
     } catch (error) {
+      console.error('Error deleting account:', error.response?.data?.message);
       toast({
         title: "Error",
-        description: "Failed to delete account. Please try again.",
+        description: error.response?.data?.message || "Failed to delete account. Please try again.",
         variant: "destructive",
       });
     } finally {
