@@ -8,6 +8,7 @@ interface HeaderProps {
 }
 
 const Header = ({ user, onLogout }: HeaderProps) => {
+  console.log("user = = = 2", user);
   return (
     <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200/50 p-4 shadow-sm">
       <div className="flex items-center justify-between">

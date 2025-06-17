@@ -12,6 +12,7 @@ interface DashboardProps {
 }
 
 const Dashboard = ({ user, onLogout }: DashboardProps) => {
+  console.log("user = = = 3", user);
   const [selectedContent, setSelectedContent] = useState<{
     title: string;
     url: string;

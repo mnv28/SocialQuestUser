@@ -31,7 +31,8 @@ interface ProfileMenuProps {
   onLogout: () => void;
 }
 
-const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
+const ProfileMenu = ({ onLogout }: ProfileMenuProps) => {
+  const [user, setUser] = useState<Login | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -43,6 +44,18 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
   const [profileData, setProfileData] = useState({ fullName: "", email: "" });
   const { toast } = useToast();
   const { axiosInstance } = useAxios();
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("adminToken");
+      const { data } = await axiosInstance.get("/user/menu/profile", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log("data", data);
+      setUser(data.user);
+    };
+    fetchUser();
+  }, []);
 
   const fetchProfileData = async () => {
     try {
