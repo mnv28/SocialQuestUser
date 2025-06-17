@@ -45,7 +45,7 @@ export const LoginFormSchema = z.object({
 export type LoginFormValues = z.infer<typeof LoginFormSchema>;
 
 export const LoginForm = ({
-  setIsForgotPasswordOpen,
+  // setIsForgotPasswordOpen,
   onLogin,
   loading = false,
 }: LoginFormProps) => {
@@ -102,13 +102,13 @@ export const LoginForm = ({
           required
         />
 
-        <button
+        {/* <button
           type="button"
           onClick={() => setIsForgotPasswordOpen(true)}
           className="mt-1 text-sm text-orange-600 hover:text-orange-500"
         >
           Forgot your password?
-        </button>
+        </button> */}
       </CardContent>
       <CardFooter>
         <ActionButton
