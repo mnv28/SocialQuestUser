@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User as LucideUser, Settings, Key, LogOut, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Login } from "./Auth/LoginForm";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useAxios } from "@/utils/axios";
-import { CHANGE_PASSWORD_ROUTE, DELETE_ACCOUNT_ROUTE } from "@/constants/routes";
+import { CHANGE_PASSWORD_ROUTE, DELETE_ACCOUNT_ROUTE, PROFILE_ROUTE } from "@/constants/routes";
 
 interface ProfileMenuProps {
   user: Login;
@@ -40,8 +40,34 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
   const [isProfileSettingsOpen, setIsProfileSettingsOpen] = useState(false);
   const [isDeleteAccountOpen, setIsDeleteAccountOpen] = useState(false);
   const [deletePassword, setDeletePassword] = useState("");
+  const [profileData, setProfileData] = useState({ fullName: "", email: "" });
   const { toast } = useToast();
   const { axiosInstance } = useAxios();
+
+  const fetchProfileData = async () => {
+    try {
+      const { data } = await axiosInstance.get(PROFILE_ROUTE);
+      if (data.success) {
+        setProfileData({
+          fullName: data.user.fullName,
+          email: data.user.email
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch profile data.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isProfileSettingsOpen) {
+      fetchProfileData();
+    }
+  }, [isProfileSettingsOpen]);
 
   const handleChangePassword = async () => {
     setIsLoading(true);
@@ -107,21 +133,26 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
     const email = formData.get("email") as string;
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await api.updateProfile({
-      //   fullName,
-      //   email,
-      // });
-
-      toast({
-        title: "Success",
-        description: "Profile updated successfully.",
+      const { data } = await axiosInstance.put(PROFILE_ROUTE, {
+        fullName,
+        email
       });
-      setIsProfileSettingsOpen(false);
+
+      if (data.success) {
+        toast({
+          title: "Success",
+          description: "Profile updated successfully.",
+        });
+        setProfileData({ fullName, email });
+        setIsProfileSettingsOpen(false);
+      } else {
+        throw new Error(data.message || 'Failed to update profile');
+      }
     } catch (error) {
+      console.error('Error updating profile:', error);
       toast({
         title: "Error",
-        description: "Failed to update profile. Please try again.",
+        description: error.response?.data?.message || "Failed to update profile. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -273,7 +304,7 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
                     id="name"
                     name="name"
                     type="text"
-                    defaultValue={user?.fullName || ""}
+                    defaultValue={profileData.fullName}
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -283,7 +314,7 @@ const ProfileMenu = ({ user, onLogout }: ProfileMenuProps) => {
                     id="email"
                     name="email"
                     type="email"
-                    defaultValue={user?.email || ""}
+                    defaultValue={profileData.email}
                     placeholder="Enter your email"
                   />
                 </div>
