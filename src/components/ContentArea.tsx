@@ -147,7 +147,8 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
                 Select a Dashboard
               </CardTitle>
               <CardDescription className="text-slate-600">
-                Choose a menu item from the sidebar to view analytics and reports
+                Please select an item from the side menu to view the dashboard and associated analytics
+                {/* Choose a menu item from the sidebar to view analytics and reports */}
               </CardDescription>
             </CardHeader>
           </Card>
