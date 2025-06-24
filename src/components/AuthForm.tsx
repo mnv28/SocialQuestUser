@@ -14,6 +14,9 @@ import { Login, LoginForm } from "./Auth/LoginForm";
 import { SignUpForm } from "./Auth/SignUpForm";
 import { TextField } from "./ui/TextField";
 import { useForm } from "react-hook-form";
+import axios from "axios";
+
+const BASE_URL = import.meta.env.VITE_API_URL;
 
 interface AuthFormProps {
   onLogin: (userData: Login) => void;
@@ -26,16 +29,21 @@ const AuthForm = ({ onLogin, loading }: AuthFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleForgotPassword = handleSubmit(async (data) => {
+  const handleForgotPassword = handleSubmit(async ({ email }) => {
     setIsLoading(true);
     try {
-      // Add your password reset logic here
+      const response = await axios.post(`${BASE_URL}/auth/forgotpassword`, { email });
+      console.log(response);
+      if (response.status !== 200) {
+        throw new Error('Failed to send reset instructions');
+      }
+      console.log(response.data);
       toast({
         title: "Reset Instructions Sent",
         description: "Please check your email for password reset instructions.",
       });
       setIsForgotPasswordOpen(false);
-    } catch (error) {
+    } catch {
       toast({
         title: "Error",
         description: "Failed to send reset instructions. Please try again.",
@@ -51,9 +59,9 @@ const AuthForm = ({ onLogin, loading }: AuthFormProps) => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <img 
-              src="/logo.webp" 
-              alt="Social Quest" 
+            <img
+              src="/logo.webp"
+              alt="Social Quest"
               className="h-16 w-auto"
             />
           </div>
@@ -97,8 +105,8 @@ const AuthForm = ({ onLogin, loading }: AuthFormProps) => {
               className="pl-10 pr-10"
             />
             <DialogFooter>
-              <Button 
-                onClick={handleForgotPassword} 
+              <Button
+                onClick={handleForgotPassword}
                 disabled={isLoading}
                 className="bg-orange-500 hover:bg-orange-600 text-white"
               >

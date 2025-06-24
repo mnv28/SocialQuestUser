@@ -32,7 +32,7 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
     try {
       const urlObj = new URL(url);
       const pathParts = urlObj.pathname.split('/').filter(Boolean);
-      
+
       // Handle /views/ format
       const viewsIndex = pathParts.indexOf('views');
       if (viewsIndex !== -1 && viewsIndex < pathParts.length - 2) {
@@ -40,7 +40,7 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
         const viewName = pathParts[viewsIndex + 2];
         return `https://public.tableau.com/views/${workbookName}/${viewName}`;
       }
-      
+
       // Handle /app/profile/ format
       const profileIndex = pathParts.indexOf('profile');
       if (profileIndex !== -1 && profileIndex < pathParts.length - 2) {
@@ -105,7 +105,7 @@ const ContentArea = ({ selectedContent }: ContentAreaProps) => {
           };
 
           const embedUrl = getTableauEmbedUrl(selectedContent.url);
-          
+
           vizRef.current = new window.tableau.Viz(
             vizContainerRef.current,
             embedUrl,
