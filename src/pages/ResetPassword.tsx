@@ -34,7 +34,7 @@ const ResetPassword = () => {
             await axios.post(`${BASE_URL}/auth/resetpassword`, {
                 iv,
                 content,
-                newPassword:password,
+                newPassword: password,
             });
             toast({ title: "Success", description: "Password reset successfully!" });
             navigate("/");
